@@ -57,12 +57,10 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
     private ProgressDialog progressDialog;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        new CallbackTask().execute(dictionaryEntries());
 
 
         //online dictionary initialized
@@ -80,8 +78,6 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
         wordTextView = findViewById(R.id.words_word);
 
 
-
-
         // Check if user has seen the onboarding screen using shared preference
         SharedPreferences preferences = getSharedPreferences("preferences", MODE_PRIVATE);
         boolean firstStart = preferences.getBoolean("firstStart", true);
@@ -91,8 +87,6 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
             Intent onboarding_activity = new Intent(this, activity_onboarding.class);
             startActivity(onboarding_activity);
         }
-
-
 
 
 //        mAdapter = new WordAdapter(mWordList, this);
@@ -144,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.search:
                 word = searchEditText.getText().toString().toLowerCase();
                 progressDialog.show();
@@ -154,10 +148,10 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
     }
 
     @Override
-    public void onResponse(@NonNull Call<DictionaryInfo> call,@NonNull Response<DictionaryInfo> response) {
+    public void onResponse(@NonNull Call<DictionaryInfo> call, @NonNull Response<DictionaryInfo> response) {
         progressDialog.hide();
 
-        if (response.isSuccessful()){
+        if (response.isSuccessful()) {
             DictionaryInfo body = response.body();
             assert body != null;
             DictionaryResult dictionaryResult = body.getResults().get(0);
@@ -167,10 +161,10 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
 
             wordTextView.setVisibility(View.VISIBLE);
             dictionaryEntriesListView.setVisibility(View.VISIBLE);
-        }else {
+        } else {
             dictionaryEntriesListView.setVisibility(View.GONE);
             wordTextView.setVisibility(View.GONE);
-            switch (response.code()){
+            switch (response.code()) {
                 case 403:
                     try {
                         Toast.makeText(this, "" + response.errorBody().string(), Toast.LENGTH_LONG).show();
@@ -191,7 +185,56 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
     public void onFailure(@NonNull Call<DictionaryInfo> call, Throwable t) {
         progressDialog.hide();
         Toast.makeText(this, "" + t.getMessage(), Toast.LENGTH_SHORT).show();
+
+
+
+        //check the oxford dictionary tree
+//        private String dictionaryEntries () {
+//            final String language = "entries/en/";
+//            final String word = "come";
+//            final String word_id = word.toLowerCase();
+//            return "https://od-api.oxforddictionaries.com/api/v2/" + language + word_id;
+//        }
+
+//        private class CallbackTask extends AsyncTask<String, Integer, String> {
+//
+//            @Override
+//            protected String doInBackground(String... params) {
+//                final String app_id = "276f67d2";
+//                final String app_key = "11c24c1a34f6a94feb01ee09f963f85c";
+//                try {
+//                    URL url = new URL(params[0]);
+//                    HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
+//                    urlConnection.setRequestProperty("Accept", "application/json");
+//                    urlConnection.setRequestProperty("app_id", app_id);
+//                    urlConnection.setRequestProperty("app_key", app_key);
+//
+//                    BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+//                    StringBuilder stringBuilder = new StringBuilder();
+//
+//                    String line = null;
+//                    while ((line = reader.readLine()) != null) {
+//                        stringBuilder.append(line + "\n");
+//                    }
+//                    return stringBuilder.toString();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return e.toString();
+//                }
+//            }
+//
+////            @Override
+////            protected void onPostExecute(String result) {
+////                super.onPostExecute(result);
+////
+////                Log.d(TAG, "onPostExecute: " + result);
+////            }
+//        }
+    }
+
+    @Override
     public void onBackPressed() {
+//        super.onBackPressed();
         new AlertDialog.Builder(this)
                 .setTitle("Done?")
                 .setIcon(R.drawable.close_icon)
@@ -205,48 +248,5 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
                 .setNegativeButton("No", null)
                 .show();
     }
-
-    //check the oxford dictionary tree
-    private String dictionaryEntries(){
-        final String language = "entries/en/";
-        final String word = "come";
-        final String word_id = word.toLowerCase();
-        return "https://od-api.oxforddictionaries.com/api/v2/" + language + word_id;
     }
 
-    private class CallbackTask extends AsyncTask<String, Integer, String>{
-
-        @Override
-        protected String doInBackground(String... params) {
-            final String app_id = "276f67d2";
-            final String app_key = "11c24c1a34f6a94feb01ee09f963f85c";
-            try {
-                URL url = new URL(params[0]);
-                HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
-                urlConnection.setRequestProperty("Accept", "application/json");
-                urlConnection.setRequestProperty("app_id", app_id);
-                urlConnection.setRequestProperty("app_key", app_key);
-
-                BufferedReader reader =  new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-                StringBuilder stringBuilder = new StringBuilder();
-
-                String line = null;
-                while ((line = reader.readLine()) != null){
-                    stringBuilder.append(line + "\n");
-                }
-                return stringBuilder.toString();
-            }
-            catch (Exception e){
-                e.printStackTrace();
-                return e.toString();
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            Log.d(TAG, "onPostExecute: " + result);
-        }
-    }
-}
