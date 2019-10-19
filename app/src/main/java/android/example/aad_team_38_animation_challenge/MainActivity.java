@@ -12,7 +12,9 @@ import android.example.aad_team_38_animation_challenge.onlineDictionary.Dictiona
 import android.example.aad_team_38_animation_challenge.onlineDictionary.DictionaryResult;
 import android.example.aad_team_38_animation_challenge.onlineDictionary.LexicalEntry;
 import android.example.aad_team_38_animation_challenge.onlineDictionary.MainApplication;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
@@ -20,11 +22,16 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -53,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        new CallbackTask().execute(dictionaryEntries());
 
 
         //online dictionary initialized
@@ -181,5 +189,49 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
     public void onFailure(@NonNull Call<DictionaryInfo> call, Throwable t) {
         progressDialog.hide();
         Toast.makeText(this, "" + t.getMessage(), Toast.LENGTH_SHORT).show();
+    }
+
+    //check the oxford dictionary tree
+    private String dictionaryEntries(){
+        final String language = "entries/en/";
+        final String word = "come";
+        final String word_id = word.toLowerCase();
+        return "https://od-api.oxforddictionaries.com/api/v2/" + language + word_id;
+    }
+
+    private class CallbackTask extends AsyncTask<String, Integer, String>{
+
+        @Override
+        protected String doInBackground(String... params) {
+            final String app_id = "276f67d2";
+            final String app_key = "11c24c1a34f6a94feb01ee09f963f85c";
+            try {
+                URL url = new URL(params[0]);
+                HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
+                urlConnection.setRequestProperty("Accept", "application/json");
+                urlConnection.setRequestProperty("app_id", app_id);
+                urlConnection.setRequestProperty("app_key", app_key);
+
+                BufferedReader reader =  new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                StringBuilder stringBuilder = new StringBuilder();
+
+                String line = null;
+                while ((line = reader.readLine()) != null){
+                    stringBuilder.append(line + "\n");
+                }
+                return stringBuilder.toString();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                return e.toString();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            Log.d(TAG, "onPostExecute: " + result);
+        }
     }
 }
