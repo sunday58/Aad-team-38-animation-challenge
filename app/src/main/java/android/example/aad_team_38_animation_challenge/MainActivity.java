@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,6 +15,8 @@ import android.example.aad_team_38_animation_challenge.onlineDictionary.Dictiona
 import android.example.aad_team_38_animation_challenge.onlineDictionary.DictionaryResult;
 import android.example.aad_team_38_animation_challenge.onlineDictionary.LexicalEntry;
 import android.example.aad_team_38_animation_challenge.onlineDictionary.MainApplication;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -140,11 +143,32 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.search:
-                word = searchEditText.getText().toString().toLowerCase();
-                progressDialog.show();
-                MainApplication.apiManager.getDictionaryEntries(word, this);
+                if (!getConnectivityStatus(MainActivity.this)){
+                    Intent intent = new Intent(MainActivity.this, NoNetwork.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                }else {
+                    word = searchEditText.getText().toString().toLowerCase();
+                    progressDialog.show();
+                    MainApplication.apiManager.getDictionaryEntries(word, this);
+                }
+
                 break;
         }
+    }
+    public static boolean getConnectivityStatus(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        if (null != activeNetwork) {
+            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI)
+                return true;
+
+            if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE)
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -174,7 +198,9 @@ public class MainActivity extends AppCompatActivity implements WordAdapter.OnWor
                     break;
                 case 400:
                 case 404:
-                    Toast.makeText(this, "Invalid Word" + response.errorBody(), Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(this, "Invalid Word" + response.errorBody(), Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(MainActivity.this, NoData.class));
+                    overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
                     break;
             }
         }
